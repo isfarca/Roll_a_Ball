@@ -8,7 +8,6 @@ using System.Collections;
 public class PlayerController : MonoBehaviour {
 	
 	// Create public variables for player speed, and for the Text UI game objects
-	public float speed;
 	public Text countText;
 	public Text winText;
 
@@ -16,10 +15,10 @@ public class PlayerController : MonoBehaviour {
 	private Rigidbody rb;
 	private int count;
 
-    private bool isFlat = true;
+    private float speed = 1000;
 
-	// At the start of the game..
-	void Start ()
+    // At the start of the game..
+    void Start ()
 	{
 		// Assign the Rigidbody component to our private rb variable
 		rb = GetComponent<Rigidbody>();
@@ -37,26 +36,20 @@ public class PlayerController : MonoBehaviour {
     // Each physics step..
     void FixedUpdate()
     {
-        // Set some local float variables equal to the value of our Horizontal and Vertical Inputs
+        // Player movement in desktop devices.
+        // Definition of force vector X and Y components.
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
+        // Building of force vector.
+        Vector3 desktopMovement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+        // Adding force to rigidbody.
+        rb.AddForce(desktopMovement * speed * Time.deltaTime);
 
-        // Create a Vector3 variable, and assign X and Z to feature our horizontal and vertical float variables above
-        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
-
-        // Add a physical force to our Player rigidbody using our 'movement' Vector3 above, 
-        // multiplying it by 'speed' - our public player speed that appears in the inspector
-        rb.AddForce(movement * speed);
-
-        Vector3 tilt = Input.acceleration;
-
-        if (isFlat)
-        {
-            tilt = Quaternion.Euler(360, 0, 0) * tilt;
-        }
-
-        rb.AddForce(tilt);
-        Debug.DrawRay(transform.position + Vector3.up, tilt, Color.cyan);
+        // Player movement in mobile devices.
+        // Building of force vector.
+        Vector3 mobileMovement = new Vector3(Input.acceleration.x, 0.0f, Input.acceleration.y);
+        // Adding force to rigidbody.
+        rb.AddForce(mobileMovement * speed * Time.deltaTime);
     }
 
     // When this game object intersects a collider with 'is trigger' checked, 
