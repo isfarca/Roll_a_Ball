@@ -5,20 +5,40 @@ using UnityEngine.UI;
 
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
-	
+public enum Strategies
+{
+    PlayerController,
+    AccelerationStrategy,
+    KeyboardStrategy,
+    TouchStrategy
+}
+
+public class PlayerController : MonoBehaviour
+{
 	// Create public variables for player speed, and for the Text UI game objects
 	public Text countText;
 	public Text winText;
 
 	// Create private references to the rigidbody component on the player, and the count of pick up objects picked up so far
-	private Rigidbody rb;
+	protected Rigidbody rb;
 	private int count;
 
-    private float speed = 1000;
+    protected float speed = 50;
+
+    public static Strategies CurrentMovement = Strategies.KeyboardStrategy;
+
+    private void Awake()
+    {
+        AddMovement(CurrentMovement);
+    }
+
+    public static void AddMovement(Strategies strategies)
+    {
+
+    }
 
     // At the start of the game..
-    void Start ()
+    public virtual void Start()
 	{
 		// Assign the Rigidbody component to our private rb variable
 		rb = GetComponent<Rigidbody>();
@@ -27,34 +47,20 @@ public class PlayerController : MonoBehaviour {
 		count = 0;
 
 		// Run the SetCountText function to update the UI (see below)
-		SetCountText ();
+		SetCountText();
 
 		// Set the text property of our Win Text UI to an empty string, making the 'You Win' (game over message) blank
 		winText.text = "";
-	}
+    }
 
     // Each physics step..
-    void FixedUpdate()
+    public virtual void FixedUpdate()
     {
-        // Player movement in desktop devices.
-        // Definition of force vector X and Y components.
-        float moveHorizontal = Input.GetAxis("Horizontal");
-        float moveVertical = Input.GetAxis("Vertical");
-        // Building of force vector.
-        Vector3 desktopMovement = new Vector3(moveHorizontal, 0.0f, moveVertical);
-        // Adding force to rigidbody.
-        rb.AddForce(desktopMovement * speed * Time.deltaTime);
-
-        // Player movement in mobile devices.
-        // Building of force vector.
-        Vector3 mobileMovement = new Vector3(Input.acceleration.x, 0.0f, Input.acceleration.y);
-        // Adding force to rigidbody.
-        rb.AddForce(mobileMovement * speed * Time.deltaTime);
     }
 
     // When this game object intersects a collider with 'is trigger' checked, 
     // store a reference to that collider in a variable named 'other'..
-    void OnTriggerEnter(Collider other) 
+    public virtual void OnTriggerEnter(Collider other) 
 	{
 		// ..and if the game object we intersect has the tag 'Pick Up' assigned to it..
 		if (other.gameObject.CompareTag ("Pick Up"))
@@ -71,7 +77,7 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	// Create a standalone function that can update the 'countText' UI and check if the required amount to win has been achieved
-	void SetCountText()
+	public virtual void SetCountText()
 	{
 		// Update the text field of our 'countText' variable
 		countText.text = "Count: " + count.ToString ();
