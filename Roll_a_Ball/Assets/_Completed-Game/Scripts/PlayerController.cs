@@ -1,16 +1,12 @@
-﻿using UnityEngine;
-
-// Include the namespace required to use Unity UI
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
-using System.Collections;
-
-public enum Strategies
+public enum ControlTypes
 {
-    PlayerController,
-    AccelerationStrategy,
-    KeyboardStrategy,
-    TouchStrategy
+	AccelerationControl,
+	KeyboardControl,
+	TouchControl
 }
 
 public class PlayerController : MonoBehaviour
@@ -19,28 +15,49 @@ public class PlayerController : MonoBehaviour
 	public Text countText;
 	public Text winText;
 
-	// Create private references to the rigidbody component on the player, and the count of pick up objects picked up so far
-	protected Rigidbody rb;
+	// Create private references to the rigid body component on the player, and the count of pick up objects picked up so far
+	private Rigidbody rb;
 	private int count;
 
-    protected float speed = 50;
+    [SerializeField] private float speed;
 
-    public static Strategies CurrentMovement = Strategies.KeyboardStrategy;
+    [SerializeField] private ControlTypes controlType = ControlTypes.AccelerationControl;
+    private IControl iControl;
 
-    private void Awake()
+    public void HandleControl()
     {
-        AddMovement(CurrentMovement);
+	    var c = gameObject.GetComponent<IControl>() as Component;
+
+	    if (c != null)
+	    {
+		    Destroy(c);
+	    }
+	    
+	    switch (controlType)
+	    {
+		    case ControlTypes.AccelerationControl:
+			    iControl = gameObject.AddComponent<AccelerationControl>();
+			    break;
+		    case ControlTypes.KeyboardControl:
+			    iControl = gameObject.AddComponent<KeyboardControl>();
+			    break;
+		    case ControlTypes.TouchControl:
+			    iControl = gameObject.AddComponent<TouchControl>();
+			    break;
+		    default:
+			    throw new ArgumentOutOfRangeException();
+	    }
     }
 
-    public static void AddMovement(Strategies strategies)
+    public void Input()
     {
-
+	    iControl.Interact(rb, speed);
     }
 
     // At the start of the game..
-    public virtual void Start()
+    public void Start()
 	{
-		// Assign the Rigidbody component to our private rb variable
+		// Assign the Rigid body component to our private rb variable
 		rb = GetComponent<Rigidbody>();
 
 		// Set the count to zero 
@@ -51,16 +68,19 @@ public class PlayerController : MonoBehaviour
 
 		// Set the text property of our Win Text UI to an empty string, making the 'You Win' (game over message) blank
 		winText.text = "";
-    }
+
+		HandleControl();
+	}
 
     // Each physics step..
-    public virtual void FixedUpdate()
+    public void FixedUpdate()
     {
+	    Input();
     }
 
     // When this game object intersects a collider with 'is trigger' checked, 
     // store a reference to that collider in a variable named 'other'..
-    public virtual void OnTriggerEnter(Collider other) 
+    public void OnTriggerEnter(Collider other) 
 	{
 		// ..and if the game object we intersect has the tag 'Pick Up' assigned to it..
 		if (other.gameObject.CompareTag ("Pick Up"))
@@ -77,7 +97,7 @@ public class PlayerController : MonoBehaviour
 	}
 
 	// Create a standalone function that can update the 'countText' UI and check if the required amount to win has been achieved
-	public virtual void SetCountText()
+	public void SetCountText()
 	{
 		// Update the text field of our 'countText' variable
 		countText.text = "Count: " + count.ToString ();
